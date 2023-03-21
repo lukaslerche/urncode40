@@ -1,3 +1,10 @@
+function reverseRecord<T extends PropertyKey, U extends PropertyKey>(input: Record<T, U>) {
+	return Object.fromEntries(Object.entries(input).map(([key, value]) => [value, key])) as Record<
+		U,
+		T
+	>;
+}
+
 const uc40: Record<string, number> = {
 	' ': 0,
 	A: 1,
@@ -41,12 +48,10 @@ const uc40: Record<string, number> = {
 	'9': 39
 };
 
-function encode(input: string): string | undefined {
-	if (!input) {
-		console.log('Empty input');
+const uc40r = reverseRecord(uc40);
 
-		return undefined;
-	}
+function encode(input: string): string | undefined {
+	if (!input) return undefined;
 
 	let encoded = '';
 	let charCount = 0;
@@ -59,9 +64,7 @@ function encode(input: string): string | undefined {
 			currentSum = 1;
 		}
 
-		if (uc40[input[i]] === undefined) {
-			return undefined;
-		}
+		if (uc40[input[i]] === undefined) return undefined;
 
 		currentSum += uc40[input[i]] * Math.pow(40, 2 - (i % 3));
 		charCount++;
@@ -71,8 +74,36 @@ function encode(input: string): string | undefined {
 	return encoded;
 }
 
-function decode(input: string): string {
-	return 'NOT IMPLEMENTED YET';
+function decode(input: string): string | undefined {
+	if (!input || input.length % 4 != 0) return undefined;
+
+	let res = '';
+
+	for (let i = 0; i < input.length; i += 4) {
+		let value = parseInt(input.substring(i + 0, i + 4), 16);
+		if (!value) return undefined;
+
+		let char1 = 0;
+		let char2 = 0;
+		let char3 = 0;
+
+		if (value > 1600) {
+			const rest = value % 1600;
+			char1 = value - rest;
+			value = rest;
+			char1 = char1 / 1600;
+		}
+		if (value > 40) {
+			const rest = value % 40;
+			char2 = value - rest;
+			value = rest;
+			char2 = char2 / 40;
+		}
+		char3 = value - 1;
+
+		res += uc40r[char1] + uc40r[char2] + uc40r[char3];
+	}
+	return res;
 }
 
 export { encode, decode };
