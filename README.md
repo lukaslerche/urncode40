@@ -1,11 +1,11 @@
 # URN Code 40 encoder/decoder
 
-(1600 * C1) + (40 * C2) + C3 + 1 = [1...64000] = [0x0001...0xFA00]
+For each triple of chars: (1600 \* C1) + (40 \* C2) + C3 + 1 = [1...64000] = [0x0001...0xFA00]
 
 ## URN Code 40 Charcter Set
 
 | Graphic Symbol | Name             | HEX Code | 8-bit code | URN Code 40 (decimal) |
-|----------------|------------------|----------|------------|-----------------------|
+| -------------- | ---------------- | -------- | ---------- | --------------------- |
 |                | PAD              |          |            | 0                     |
 | A              | Capital letter A | 41       | 01000001   | 1                     |
 | B              | Capital letter B | 42       | 01000010   | 2                     |
@@ -46,4 +46,3 @@
 | 7              | Digit seven      | 37       | 00110111   | 37                    |
 | 8              | Digit eight      | 38       | 00111000   | 38                    |
 | 9              | Digit nine       | 39       | 00111001   | 39                    |
-|                |                  |          |            |                       |
