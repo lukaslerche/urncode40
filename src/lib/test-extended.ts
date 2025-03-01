@@ -1,6 +1,6 @@
 import { encode, decode } from './urncode40';
 
-function testExtendedEncoding() {
+export function testExtendedEncoding() {
 	console.log('Testing URN Code 40 Extended Encoding');
 	console.log('');
 
