@@ -5,7 +5,10 @@
 <div class="container">
 	<header>
 		<h1>URN Code 40 Encoder/Decoder</h1>
-		<p>A tool for encoding and decoding text using the URN Code 40 specification with extended encoding support</p>
+		<p>
+			A tool for encoding and decoding text using the URN Code 40 specification with extended
+			encoding support
+		</p>
 	</header>
 
 	<slot />

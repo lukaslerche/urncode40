@@ -24,6 +24,7 @@ URN Code 40 is an encoding scheme that provides a method to encode data in confo
 ### Encoding Formula
 
 The standard encoding uses the formula:
+
 ```
 (1600*C1) + (40*C2) + C3 + 1
 ```
@@ -87,6 +88,7 @@ URN Code 40 also includes extended encoding capabilities:
 ## Development
 
 This project is built with:
+
 - SvelteKit
 - TypeScript
 - Pico CSS

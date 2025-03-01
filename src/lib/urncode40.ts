@@ -63,20 +63,20 @@ function encodeLongNumeric(numStr: string): string {
 
 	// Convert the numeric string to a big integer
 	const numValue = BigInt(numStr);
-	
+
 	// Convert to bytes (msb first)
 	let hexValue = numValue.toString(16).toUpperCase();
 	if (hexValue.length % 2 !== 0) hexValue = '0' + hexValue;
-	
+
 	// Calculate number of bytes needed
 	const byteCount = Math.ceil(hexValue.length / 2);
 	if (byteCount < 4 || byteCount > 19) return '';
-	
+
 	// Create the second byte value: digits (9-24 as 0-F) and byte count (4-19 as 0-F)
 	const digitCode = (numStr.length - 9).toString(16).toUpperCase();
 	const byteCode = (byteCount - 4).toString(16).toUpperCase();
 	const secondByte = digitCode + byteCode;
-	
+
 	return 'FB' + secondByte + hexValue;
 }
 
@@ -108,17 +108,17 @@ function encode(input: string): string | undefined {
 		// Check for non-standard characters that need extended encoding
 		const char = input[i];
 		const charCode = char.charCodeAt(0);
-		
+
 		if (uc40[char.toUpperCase()] !== undefined) {
 			// Standard character - process in triplets
 			// Make sure we have at least 3 characters left or pad
 			let triplet = input.substring(i, i + 3).padEnd(3, ' ');
-			
+
 			// Check if all characters in triplet are valid
 			const c1 = triplet[0].toUpperCase();
 			const c2 = triplet[1].toUpperCase();
 			const c3 = triplet[2].toUpperCase();
-			
+
 			if (uc40[c1] === undefined || uc40[c2] === undefined || uc40[c3] === undefined) {
 				// If any character needs special encoding, only process the first char
 				triplet = input[i].padEnd(3, ' ');
@@ -126,40 +126,40 @@ function encode(input: string): string | undefined {
 			} else {
 				i += 3;
 			}
-			
+
 			// Calculate value using the formula
-			const value = 1600 * uc40[triplet[0].toUpperCase()] + 
-				40 * uc40[triplet[1].toUpperCase()] + 
-				uc40[triplet[2].toUpperCase()] + 1;
-			
+			const value =
+				1600 * uc40[triplet[0].toUpperCase()] +
+				40 * uc40[triplet[1].toUpperCase()] +
+				uc40[triplet[2].toUpperCase()] +
+				1;
+
 			encoded += value.toString(16).toUpperCase().padStart(4, '0');
-		}
-		else if (charCode <= 127) {
+		} else if (charCode <= 127) {
 			// ISO/IEC 646 character not in the base table
 			encoded += 'FC' + charCode.toString(16).toUpperCase().padStart(2, '0');
 			i++;
-		}
-		else if (charCode <= 0x7FF) {
+		} else if (charCode <= 0x7ff) {
 			// Double-byte UTF-8 character
-			const byte1 = 0xC0 | (charCode >> 6);
-			const byte2 = 0x80 | (charCode & 0x3F);
-			encoded += 'FD' + 
-				byte1.toString(16).toUpperCase().padStart(2, '0') + 
+			const byte1 = 0xc0 | (charCode >> 6);
+			const byte2 = 0x80 | (charCode & 0x3f);
+			encoded +=
+				'FD' +
+				byte1.toString(16).toUpperCase().padStart(2, '0') +
 				byte2.toString(16).toUpperCase().padStart(2, '0');
 			i++;
-		}
-		else if (charCode <= 0xFFFF) {
+		} else if (charCode <= 0xffff) {
 			// Triple-byte UTF-8 character
-			const byte1 = 0xE0 | (charCode >> 12);
-			const byte2 = 0x80 | ((charCode >> 6) & 0x3F);
-			const byte3 = 0x80 | (charCode & 0x3F);
-			encoded += 'FE' + 
-				byte1.toString(16).toUpperCase().padStart(2, '0') + 
-				byte2.toString(16).toUpperCase().padStart(2, '0') + 
+			const byte1 = 0xe0 | (charCode >> 12);
+			const byte2 = 0x80 | ((charCode >> 6) & 0x3f);
+			const byte3 = 0x80 | (charCode & 0x3f);
+			encoded +=
+				'FE' +
+				byte1.toString(16).toUpperCase().padStart(2, '0') +
+				byte2.toString(16).toUpperCase().padStart(2, '0') +
 				byte3.toString(16).toUpperCase().padStart(2, '0');
 			i++;
-		}
-		else {
+		} else {
 			// Character cannot be encoded
 			return undefined;
 		}
@@ -178,13 +178,13 @@ function decode(input: string): string | undefined {
 		// Check for extended encoding markers
 		if (i <= input.length - 2) {
 			const marker = input.substring(i, i + 2).toUpperCase();
-			
+
 			// FB: Long numeric string
 			if (marker === 'FB' && i + 4 <= input.length) {
 				const secondByte = input.substring(i + 2, i + 4);
 				const digitCount = parseInt(secondByte[0], 16) + 9; // 0-F -> 9-24 digits
-				const byteCount = parseInt(secondByte[1], 16) + 4;  // 0-F -> 4-19 bytes
-				
+				const byteCount = parseInt(secondByte[1], 16) + 4; // 0-F -> 4-19 bytes
+
 				if (i + 4 + byteCount * 2 <= input.length) {
 					const hexValue = input.substring(i + 4, i + 4 + byteCount * 2);
 					try {
@@ -193,12 +193,12 @@ function decode(input: string): string | undefined {
 						res += numValue.padStart(digitCount, '0');
 						i += 4 + byteCount * 2;
 						continue;
-					} catch (e) {
+					} catch {
 						return undefined; // Invalid hexadecimal
 					}
 				}
 			}
-			
+
 			// FC: ISO/IEC 646 character
 			if (marker === 'FC' && i + 4 <= input.length) {
 				const charCode = parseInt(input.substring(i + 2, i + 4), 16);
@@ -208,30 +208,30 @@ function decode(input: string): string | undefined {
 					continue;
 				}
 			}
-			
+
 			// FD: Double-byte UTF-8
 			if (marker === 'FD' && i + 6 <= input.length) {
 				const byte1 = parseInt(input.substring(i + 2, i + 4), 16);
 				const byte2 = parseInt(input.substring(i + 4, i + 6), 16);
-				
+
 				// Verify bytes follow UTF-8 format
-				if ((byte1 & 0xE0) === 0xC0 && (byte2 & 0xC0) === 0x80) {
-					const charCode = ((byte1 & 0x1F) << 6) | (byte2 & 0x3F);
+				if ((byte1 & 0xe0) === 0xc0 && (byte2 & 0xc0) === 0x80) {
+					const charCode = ((byte1 & 0x1f) << 6) | (byte2 & 0x3f);
 					res += String.fromCharCode(charCode);
 					i += 6;
 					continue;
 				}
 			}
-			
+
 			// FE: Triple-byte UTF-8
 			if (marker === 'FE' && i + 8 <= input.length) {
 				const byte1 = parseInt(input.substring(i + 2, i + 4), 16);
 				const byte2 = parseInt(input.substring(i + 4, i + 6), 16);
 				const byte3 = parseInt(input.substring(i + 6, i + 8), 16);
-				
+
 				// Verify bytes follow UTF-8 format
-				if ((byte1 & 0xF0) === 0xE0 && (byte2 & 0xC0) === 0x80 && (byte3 & 0xC0) === 0x80) {
-					const charCode = ((byte1 & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F);
+				if ((byte1 & 0xf0) === 0xe0 && (byte2 & 0xc0) === 0x80 && (byte3 & 0xc0) === 0x80) {
+					const charCode = ((byte1 & 0x0f) << 12) | ((byte2 & 0x3f) << 6) | (byte3 & 0x3f);
 					res += String.fromCharCode(charCode);
 					i += 8;
 					continue;
@@ -286,8 +286,8 @@ function validate(input: string): boolean {
 	for (let i = 0; i < input.length; i++) {
 		const char = input[i];
 		const charCode = char.charCodeAt(0);
-		
-		if (uc40[char.toUpperCase()] === undefined && charCode > 0xFFFF) {
+
+		if (uc40[char.toUpperCase()] === undefined && charCode > 0xffff) {
 			return false;
 		}
 	}

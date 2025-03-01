@@ -149,11 +149,9 @@
 			</p>
 			<p>It compacts three characters into two bytes (four hex digits) using the formula:</p>
 			<code>(1600*C1) + (40*C2) + C3 + 1</code>
-				<strong>Basic Character Set:</strong> A-Z, 0-9, space, hyphen (-), period (.) and colon (:).
+			<strong>Basic Character Set:</strong> A-Z, 0-9, space, hyphen (-), period (.) and colon (:).
 			<h4>Extended Encoding</h4>
-			<p>
-				URN Code 40 also supports extended encoding for additional characters and features:
-			</p>
+			<p>URN Code 40 also supports extended encoding for additional characters and features:</p>
 			<ul>
 				<li>
 					<strong>FB:</strong> Long numeric strings (9-24 digits) are encoded more efficiently
@@ -162,7 +160,10 @@
 				<li><strong>FD:</strong> Double-byte UTF-8 characters</li>
 				<li><strong>FE:</strong> Triple-byte UTF-8 characters</li>
 			</ul>
-			<p>This allows encoding most Unicode characters and improves efficiency for long numeric sequences.</p>
+			<p>
+				This allows encoding most Unicode characters and improves efficiency for long numeric
+				sequences.
+			</p>
 		</details>
 	</div>
 </main>
