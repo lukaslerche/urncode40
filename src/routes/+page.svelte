@@ -49,12 +49,9 @@
 			return;
 		}
 
-		// Basic validation for encoded text (must be hex and multiple of 4)
-		if (!/^[0-9A-Fa-f]+$/.test(encodedText) || encodedText.length % 4 !== 0) {
-			showMessage(
-				'Invalid encoded format. Must be hexadecimal and length must be multiple of 4.',
-				'error'
-			);
+		 // Updated validation for encoded text (must be hex but can have variable length with extended encoding)
+		if (!/^[0-9A-Fa-f]+$/.test(encodedText)) {
+			showMessage('Invalid encoded format. Must be hexadecimal.', 'error');
 			return;
 		}
 
@@ -148,8 +145,8 @@
 				the urn:oid namespace scheme.
 			</p>
 			<p>It compacts three characters into two bytes (four hex digits) using the formula:</p>
-			<code>(1600*C1) + (40*C2) + C3 + 1</code>
-			<strong>Basic Character Set:</strong> A-Z, 0-9, space, hyphen (-), period (.) and colon (:).
+			<p><code>(1600*C1) + (40*C2) + C3 + 1</code></p>
+			<p><strong>Basic Character Set:</strong> A-Z, 0-9, space, hyphen (-), period (.) and colon (:).</p>
 			<h4>Extended Encoding</h4>
 			<p>URN Code 40 also supports extended encoding for additional characters and features:</p>
 			<ul>
