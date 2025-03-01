@@ -53,57 +53,83 @@ const uc40r = reverseRecord(uc40);
 function encode(input: string): string | undefined {
 	if (!input) return undefined;
 
+	// Pad the input to a multiple of 3 if needed
+	const paddedInput = input.padEnd(Math.ceil(input.length / 3) * 3, ' ');
+	
 	let encoded = '';
-	let charCount = 0;
-	let currentSum = 1;
 
-	for (let i = 0; i < input.length; i++) {
-		if (charCount == 3) {
-			encoded += currentSum.toString(16).toUpperCase().padStart(4, '0');
-			charCount = 0;
-			currentSum = 1;
+	for (let i = 0; i < paddedInput.length; i += 3) {
+		// Get the three characters to encode
+		const char1 = paddedInput[i];
+		const char2 = paddedInput[i + 1];
+		const char3 = paddedInput[i + 2];
+
+		// Check if all characters are valid - use uppercase for case-insensitivity
+		const c1 = char1.toUpperCase();
+		const c2 = char2.toUpperCase();
+		const c3 = char3.toUpperCase();
+
+		if (uc40[c1] === undefined || uc40[c2] === undefined || uc40[c3] === undefined) {
+			return undefined;
 		}
 
-		if (uc40[input[i]] === undefined) return undefined;
-
-		currentSum += uc40[input[i]] * Math.pow(40, 2 - (i % 3));
-		charCount++;
+		// Calculate value using the formula: (1600*C1) + (40*C2) + C3 + 1
+		const value = (1600 * uc40[c1]) + (40 * uc40[c2]) + uc40[c3] + 1;
+		
+		// Convert to hexadecimal and pad to 4 digits
+		encoded += value.toString(16).toUpperCase().padStart(4, '0');
 	}
 
-	encoded += currentSum.toString(16).toUpperCase().padStart(4, '0');
 	return encoded;
 }
 
 function decode(input: string): string | undefined {
-	if (!input || input.length % 4 != 0) return undefined;
+	if (!input || input.length % 4 !== 0) return undefined;
 
 	let res = '';
 
 	for (let i = 0; i < input.length; i += 4) {
-		let value = parseInt(input.substring(i + 0, i + 4), 16);
-		if (!value) return undefined;
+		// Parse the hexadecimal value - make case-insensitive
+		let value = parseInt(input.substring(i, i + 4), 16);
+		if (isNaN(value)) return undefined;
 
-		let char1 = 0;
-		let char2 = 0;
-		let char3 = 0;
+		value = value - 1; // Subtract the +1 from the encoding formula
+		
+		const char1 = Math.floor(value / 1600);
+		value = value % 1600;
+		
+		const char2 = Math.floor(value / 40);
+		const char3 = value % 40;
 
-		if (value > 1600) {
-			const rest = value % 1600;
-			char1 = value - rest;
-			value = rest;
-			char1 = char1 / 1600;
+		if (uc40r[char1] === undefined || uc40r[char2] === undefined || uc40r[char3] === undefined) {
+			return undefined;
 		}
-		if (value > 40) {
-			const rest = value % 40;
-			char2 = value - rest;
-			value = rest;
-			char2 = char2 / 40;
-		}
-		char3 = value - 1;
 
-		res += uc40r[char1] + uc40r[char2] + uc40r[char3];
+		// Only add non-pad characters to result unless they're at the end
+		const triplet = uc40r[char1] + uc40r[char2] + uc40r[char3];
+		res += triplet;
 	}
-	return res;
+
+	// Trim trailing spaces that might have been added as padding
+	return res.trimEnd();
 }
 
-export { encode, decode };
+/**
+ * Validates if a string can be encoded using URN Code 40
+ * @param input The string to validate
+ * @returns true if the string can be encoded, false otherwise
+ */
+function validate(input: string): boolean {
+	if (!input) return false;
+	
+	// Check if all characters are valid URN Code 40 characters
+	for (let i = 0; i < input.length; i++) {
+		if (uc40[input[i].toUpperCase()] === undefined) {
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+export { encode, decode, validate };
