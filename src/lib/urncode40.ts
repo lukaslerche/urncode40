@@ -55,7 +55,7 @@ function encode(input: string): string | undefined {
 
 	// Pad the input to a multiple of 3 if needed
 	const paddedInput = input.padEnd(Math.ceil(input.length / 3) * 3, ' ');
-	
+
 	let encoded = '';
 
 	for (let i = 0; i < paddedInput.length; i += 3) {
@@ -74,8 +74,8 @@ function encode(input: string): string | undefined {
 		}
 
 		// Calculate value using the formula: (1600*C1) + (40*C2) + C3 + 1
-		const value = (1600 * uc40[c1]) + (40 * uc40[c2]) + uc40[c3] + 1;
-		
+		const value = 1600 * uc40[c1] + 40 * uc40[c2] + uc40[c3] + 1;
+
 		// Convert to hexadecimal and pad to 4 digits
 		encoded += value.toString(16).toUpperCase().padStart(4, '0');
 	}
@@ -94,10 +94,10 @@ function decode(input: string): string | undefined {
 		if (isNaN(value)) return undefined;
 
 		value = value - 1; // Subtract the +1 from the encoding formula
-		
+
 		const char1 = Math.floor(value / 1600);
 		value = value % 1600;
-		
+
 		const char2 = Math.floor(value / 40);
 		const char3 = value % 40;
 
@@ -121,14 +121,14 @@ function decode(input: string): string | undefined {
  */
 function validate(input: string): boolean {
 	if (!input) return false;
-	
+
 	// Check if all characters are valid URN Code 40 characters
 	for (let i = 0; i < input.length; i++) {
 		if (uc40[input[i].toUpperCase()] === undefined) {
 			return false;
 		}
 	}
-	
+
 	return true;
 }
 

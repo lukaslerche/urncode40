@@ -27,7 +27,10 @@
 		}
 
 		if (!validate(plainText)) {
-			showMessage('Input contains invalid characters. Only A-Z, 0-9, space, hyphen, period, and colon are allowed.', 'error');
+			showMessage(
+				'Input contains invalid characters. Only A-Z, 0-9, space, hyphen, period, and colon are allowed.',
+				'error'
+			);
 			return;
 		}
 
@@ -48,7 +51,10 @@
 
 		// Basic validation for encoded text (must be hex and multiple of 4)
 		if (!/^[0-9A-Fa-f]+$/.test(encodedText) || encodedText.length % 4 !== 0) {
-			showMessage('Invalid encoded format. Must be hexadecimal and length must be multiple of 4.', 'error');
+			showMessage(
+				'Invalid encoded format. Must be hexadecimal and length must be multiple of 4.',
+				'error'
+			);
 			return;
 		}
 
@@ -62,7 +68,8 @@
 	}
 
 	function copyToClipboard(text: string): void {
-		navigator.clipboard.writeText(text)
+		navigator.clipboard
+			.writeText(text)
 			.then(() => showMessage('Copied to clipboard!', 'success'))
 			.catch(() => showMessage('Failed to copy to clipboard.', 'error'));
 	}
@@ -78,7 +85,7 @@
 		// Try to get previously entered data from local storage
 		const savedPlain = localStorage.getItem('urncode40_plainText');
 		const savedEncoded = localStorage.getItem('urncode40_encodedText');
-		
+
 		if (savedPlain) plainText = savedPlain;
 		if (savedEncoded) encodedText = savedEncoded;
 	});
@@ -101,12 +108,10 @@
 				bind:value={plainText}
 				rows="5"
 			></textarea>
-			
+
 			<div class="actions">
 				<button class="primary" on:click={handleEncode}>Encode ↓</button>
-				<button class="outline" on:click={() => copyToClipboard(plainText)}>
-					Copy
-				</button>
+				<button class="outline" on:click={() => copyToClipboard(plainText)}> Copy </button>
 			</div>
 		</div>
 
@@ -117,12 +122,10 @@
 				bind:value={encodedText}
 				rows="5"
 			></textarea>
-			
+
 			<div class="actions">
 				<button class="primary" on:click={handleDecode}>Decode ↑</button>
-				<button class="outline" on:click={() => copyToClipboard(encodedText)}>
-					Copy
-				</button>
+				<button class="outline" on:click={() => copyToClipboard(encodedText)}> Copy </button>
 			</div>
 		</div>
 	</article>
@@ -132,11 +135,7 @@
 	</div>
 
 	{#if resultMessage}
-		<div 
-			class="message {messageType}" 
-			role="alert"
-			transition:fade={{ duration: 200 }}
-		>
+		<div class="message {messageType}" role="alert" transition:fade={{ duration: 200 }}>
 			{resultMessage}
 		</div>
 	{/if}
@@ -144,7 +143,10 @@
 	<div class="info-box">
 		<details>
 			<summary>About URN Code 40</summary>
-			<p>URN Code 40 is an encoding scheme that provides a method to encode data in conformity with the urn:oid namespace scheme.</p>
+			<p>
+				URN Code 40 is an encoding scheme that provides a method to encode data in conformity with
+				the urn:oid namespace scheme.
+			</p>
 			<p>It compacts three characters into two bytes (four hex digits) using the formula:</p>
 			<code>(1600*C1) + (40*C2) + C3 + 1</code>
 			<p>Valid characters are: A-Z, 0-9, space, hyphen (-), period (.) and colon (:).</p>

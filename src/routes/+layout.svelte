@@ -9,16 +9,25 @@
 	</header>
 
 	<slot />
-	
+
 	<footer>
 		<hr />
 		<div class="footer-content">
 			<p>
-				<a href="https://github.com/lukaslerche/urncode40" target="_blank" rel="noopener noreferrer">
+				<a
+					href="https://github.com/lukaslerche/urncode40"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
 					GitHub Repository
 				</a>
 			</p>
-			<p>Built with <a href="https://kit.svelte.dev/" target="_blank" rel="noopener noreferrer">SvelteKit</a> and <a href="https://picocss.com/" target="_blank" rel="noopener noreferrer">Pico CSS</a></p>
+			<p>
+				Built with <a href="https://kit.svelte.dev/" target="_blank" rel="noopener noreferrer"
+					>SvelteKit</a
+				>
+				and <a href="https://picocss.com/" target="_blank" rel="noopener noreferrer">Pico CSS</a>
+			</p>
 		</div>
 	</footer>
 </div>
