@@ -28,7 +28,7 @@
 
 		if (!validate(plainText)) {
 			showMessage(
-				'Input contains invalid characters. Only A-Z, 0-9, space, hyphen, period, and colon are allowed.',
+				'Input contains invalid characters. The encoding supports A-Z, 0-9, space, hyphen, period, colon, and with extended encoding most Unicode characters.',
 				'error'
 			);
 			return;
@@ -104,7 +104,7 @@
 		<div>
 			<h2>Plain Text</h2>
 			<textarea
-				placeholder="Enter text to encode (A-Z, 0-9, space, hyphen, period, colon)"
+				placeholder="Enter text to encode (supports basic characters and extended Unicode with special encoding)"
 				bind:value={plainText}
 				rows="5"
 			></textarea>
@@ -149,7 +149,20 @@
 			</p>
 			<p>It compacts three characters into two bytes (four hex digits) using the formula:</p>
 			<code>(1600*C1) + (40*C2) + C3 + 1</code>
-			<p>Valid characters are: A-Z, 0-9, space, hyphen (-), period (.) and colon (:).</p>
+				<strong>Basic Character Set:</strong> A-Z, 0-9, space, hyphen (-), period (.) and colon (:).
+			<h4>Extended Encoding</h4>
+			<p>
+				URN Code 40 also supports extended encoding for additional characters and features:
+			</p>
+			<ul>
+				<li>
+					<strong>FB:</strong> Long numeric strings (9-24 digits) are encoded more efficiently
+				</li>
+				<li><strong>FC:</strong> ISO/IEC 646 characters not in the base table</li>
+				<li><strong>FD:</strong> Double-byte UTF-8 characters</li>
+				<li><strong>FE:</strong> Triple-byte UTF-8 characters</li>
+			</ul>
+			<p>This allows encoding most Unicode characters and improves efficiency for long numeric sequences.</p>
 		</details>
 	</div>
 </main>
@@ -209,5 +222,14 @@
 		background-color: rgba(0, 0, 0, 0.1);
 		padding: 0.2rem 0.4rem;
 		border-radius: 0.3rem;
+	}
+
+	ul {
+		margin-top: 0.5rem;
+		padding-left: 1.5rem;
+	}
+
+	h4 {
+		margin: 1rem 0 0.5rem 0;
 	}
 </style>

@@ -1,8 +1,45 @@
-# URN Code 40 encoder/decoder
+# URN Code 40 Encoder/Decoder
 
-For each triple of chars: (1600 \* C1) + (40 \* C2) + C3 + 1 = [1...64000] = [0x0001...0xFA00]
+A web-based tool for encoding and decoding text using the URN Code 40 specification, including extended encoding support.
 
-## URN Code 40 Charcter Set
+## Features
+
+- Encode and decode text using the URN Code 40 specification
+- Support for extended encoding:
+  - FB: Long numeric strings (9-24 digits)
+  - FC: ISO/IEC 646 characters
+  - FD: Double-byte UTF-8 characters
+  - FE: Triple-byte UTF-8 characters
+- Copy encoded or decoded text to clipboard
+- Persistent storage of entered text using localStorage
+
+## URN Code 40 Specification
+
+URN Code 40 is an encoding scheme that provides a method to encode data in conformity with the urn:oid namespace scheme. The basic encoding process takes a string of three data characters and compacts these into two bytes (four hexadecimal characters).
+
+### Basic Character Set
+
+- Space, A-Z, hyphen (-), period (.), colon (:), digits 0-9
+
+### Encoding Formula
+
+The standard encoding uses the formula:
+```
+(1600*C1) + (40*C2) + C3 + 1
+```
+
+Where C1, C2, and C3 are the decimal values of three characters from the URN Code 40 character set.
+
+### Extended Encoding
+
+URN Code 40 also includes extended encoding capabilities:
+
+- **FB**: Long numeric string encoding (for 9-24 digits)
+- **FC**: ISO/IEC 646 characters not in the base table
+- **FD**: Double-byte UTF-8 characters
+- **FE**: Triple-byte UTF-8 characters
+
+## URN Code 40 Character Set
 
 | Graphic Symbol | Name             | HEX Code | 8-bit code | URN Code 40 (decimal) |
 | -------------- | ---------------- | -------- | ---------- | --------------------- |
@@ -46,3 +83,10 @@ For each triple of chars: (1600 \* C1) + (40 \* C2) + C3 + 1 = [1...64000] = [0x
 | 7              | Digit seven      | 37       | 00110111   | 37                    |
 | 8              | Digit eight      | 38       | 00111000   | 38                    |
 | 9              | Digit nine       | 39       | 00111001   | 39                    |
+
+## Development
+
+This project is built with:
+- SvelteKit
+- TypeScript
+- Pico CSS
