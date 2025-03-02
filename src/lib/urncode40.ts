@@ -90,118 +90,184 @@ function encodeLongNumeric(numStr: string): string {
 	return 'FB' + secondByte + hexValue;
 }
 
-function encode(input: string): string | undefined {
-	if (!input) return undefined;
-
-	let encoded = '';
-	let i = 0;
-	// Buffer to store standard characters before encoding them as triplets
-	let standardBuffer = '';
-
-	// Helper function to encode standard character buffer as triplets
-	function encodeStandardBuffer() {
-		while (standardBuffer.length > 0) {
-			// Take up to 3 characters from the buffer
-			const triplet = standardBuffer.substring(0, 3);
-			standardBuffer = standardBuffer.substring(3);
-
-			// If this is the last chunk and it's less than 3 characters, pad it
-			const paddedTriplet = triplet.length < 3 ? triplet.padEnd(3, ' ') : triplet;
-
-			// Calculate value using the formula
-			const value =
-				1600 * uc40[paddedTriplet[0].toUpperCase()] +
-				40 * uc40[paddedTriplet[1].toUpperCase()] +
-				uc40[paddedTriplet[2].toUpperCase()] +
-				1;
-
-			encoded += value.toString(16).toUpperCase().padStart(4, '0');
-		}
-	}
-
-	while (i < input.length) {
-		// Check for long numeric string (9-24 digits)
-		if (isNumeric(input[i])) {
-			let j = i;
-			while (j < input.length && isNumeric(input[j])) {
-				j++;
-			}
-			const numericRun = input.substring(i, j);
-
-			if (numericRun.length >= 9 && numericRun.length <= 24) {
-				// Compare standard encoding versus FB encoding
-				const fbEncoding = encodeLongNumeric(numericRun);
-				const fbLength = fbEncoding.length;
-				const standardLength = calculateStandardEncodingLength(numericRun);
-
-				// Only use FB encoding if it's more efficient
-				if (fbEncoding && fbLength <= standardLength) {
-					// Encode any buffered standard characters first
-					encodeStandardBuffer();
-
-					encoded += fbEncoding;
-					i = j;
-					continue;
-				}
-			}
-
-			// If we didn't use FB encoding, add all digits to the standard buffer
-			while (i < j) {
-				standardBuffer += input[i];
-				i++;
-			}
-			continue;
-		}
-
-		// Check for character type
-		const char = input[i];
-		const charCode = char.charCodeAt(0);
-
-		if (uc40[char.toUpperCase()] !== undefined) {
-			// Standard character - add to buffer
-			standardBuffer += char;
-			i++;
-		} else {
-			// Non-standard character - encode any buffered standard characters first
-			encodeStandardBuffer();
-
-			// Now encode the special character
-			if (charCode <= 127) {
-				// ISO/IEC 646 character not in the base table
-				encoded += 'FC' + charCode.toString(16).toUpperCase().padStart(2, '0');
-			} else if (charCode <= 0x7ff) {
-				// Double-byte UTF-8 character
-				const byte1 = 0xc0 | (charCode >> 6);
-				const byte2 = 0x80 | (charCode & 0x3f);
-				encoded +=
-					'FD' +
-					byte1.toString(16).toUpperCase().padStart(2, '0') +
-					byte2.toString(16).toUpperCase().padStart(2, '0');
-			} else if (charCode <= 0xffff) {
-				// Triple-byte UTF-8 character
-				const byte1 = 0xe0 | (charCode >> 12);
-				const byte2 = 0x80 | ((charCode >> 6) & 0x3f);
-				const byte3 = 0x80 | (charCode & 0x3f);
-				encoded +=
-					'FE' +
-					byte1.toString(16).toUpperCase().padStart(2, '0') +
-					byte2.toString(16).toUpperCase().padStart(2, '0') +
-					byte3.toString(16).toUpperCase().padStart(2, '0');
-			} else {
-				// Character cannot be encoded
-				return undefined;
-			}
-			i++;
-		}
-	}
-
-	// Encode any remaining standard characters in the buffer
-	encodeStandardBuffer();
-
-	return encoded;
+// Encode using only standard URN Code 40 encoding (no FB, FC, etc.)
+function encodeStandardOnly(input: string): string | undefined {
+  // Skip if any char can't be encoded with standard encoding
+  for (let i = 0; i < input.length; i++) {
+    if (uc40[input[i].toUpperCase()] === undefined) {
+      return undefined;
+    }
+  }
+  
+  return encodeStandardBuffer(input);
 }
 
-function decode(input: string): string | undefined {
+// Helper function to encode a string using standard triplet encoding
+function encodeStandardBuffer(input: string): string {
+  let result = '';
+  
+  for (let i = 0; i < input.length; i += 3) {
+    // Get up to 3 chars, pad with spaces if needed
+    const triplet = input.substring(i, i + 3).padEnd(3, ' ');
+    
+    // Calculate value using the formula
+    const value =
+      1600 * uc40[triplet[0].toUpperCase()] +
+      40 * uc40[triplet[1].toUpperCase()] +
+      uc40[triplet[2].toUpperCase()] +
+      1;
+    
+    result += value.toString(16).toUpperCase().padStart(4, '0');
+  }
+  
+  return result;
+}
+
+function encode(input: string): string | undefined {
+  if (!input) return undefined;
+  
+  // Try standard-only encoding first (if all chars are valid for it)
+  const standardOnlyEncoding = encodeStandardOnly(input);
+  
+  // If input only has standard chars, try both approaches (standard vs mixed)
+  if (standardOnlyEncoding) {
+    // Let's try mixed encoding to compare length
+    const mixedEncoding = tryOptimizedEncoding(input);
+    
+    // Return the shorter option
+    if (mixedEncoding && mixedEncoding.length < standardOnlyEncoding.length) {
+      return mixedEncoding;
+    }
+    return standardOnlyEncoding;
+  }
+  
+  // If input has non-standard chars, we must use mixed encoding
+  return tryOptimizedEncoding(input);
+}
+
+function tryOptimizedEncoding(input: string): string | undefined {
+  let encoded = '';
+  let i = 0;
+  
+  // Buffer to store standard characters before encoding them as triplets
+  let standardBuffer = '';
+
+  // Helper function to encode and clear the standard character buffer
+  function processStandardBuffer(): void {
+    if (standardBuffer.length > 0) {
+      encoded += encodeStandardBuffer(standardBuffer);
+      standardBuffer = '';
+    }
+  }
+
+  while (i < input.length) {
+    // Check for numeric runs that could use FB encoding
+    if (isNumeric(input[i])) {
+      // Find end of numeric run
+      let j = i;
+      while (j < input.length && isNumeric(input[j])) {
+        j++;
+      }
+      
+      const numericRun = input.substring(i, j);
+      
+      if (numericRun.length >= 9) {
+        // Compare encoding options for this numeric run
+        
+        // Option 1: Standard buffer + FB encoding
+        const bufferEncoding = standardBuffer.length > 0 ? 
+          encodeStandardBuffer(standardBuffer) : '';
+          
+        const fbEncoding = encodeLongNumeric(numericRun);
+        if (fbEncoding) {
+          const option1Length = bufferEncoding.length + fbEncoding.length;
+          
+          // Option 2: Everything with standard encoding
+          const option2Length = calculateStandardEncodingLength(standardBuffer + numericRun);
+          
+          if (option1Length <= option2Length) {
+            // If FB is more efficient, use it
+            if (standardBuffer.length > 0) {
+              encoded += encodeStandardBuffer(standardBuffer);
+              standardBuffer = '';
+            }
+            encoded += fbEncoding;
+            i = j;
+            continue;
+          }
+        }
+      }
+      
+      // If we didn't use FB encoding, add all digits to the standard buffer
+      while (i < j) {
+        standardBuffer += input[i];
+        i++;
+      }
+      continue;
+    }
+
+    // Check for character type
+    const char = input[i];
+    const charCode = char.charCodeAt(0);
+    
+    if (uc40[char.toUpperCase()] !== undefined) {
+      // Standard character - add to buffer
+      standardBuffer += char;
+      i++;
+    }
+    else {
+      // Non-standard character - encode any buffered standard characters first
+      processStandardBuffer();
+      
+      // Now encode the special character
+      if (charCode <= 127) {
+        // ISO/IEC 646 character not in the base table
+        encoded += 'FC' + charCode.toString(16).toUpperCase().padStart(2, '0');
+      }
+      else if (charCode <= 0x7FF) {
+        // Double-byte UTF-8 character
+        const byte1 = 0xC0 | (charCode >> 6);
+        const byte2 = 0x80 | (charCode & 0x3F);
+        encoded += 'FD' + 
+          byte1.toString(16).toUpperCase().padStart(2, '0') + 
+          byte2.toString(16).toUpperCase().padStart(2, '0');
+      }
+      else if (charCode <= 0xFFFF) {
+        // Triple-byte UTF-8 character
+        const byte1 = 0xE0 | (charCode >> 12);
+        const byte2 = 0x80 | ((charCode >> 6) & 0x3F);
+        const byte3 = 0x80 | (charCode & 0x3F);
+        encoded += 'FE' + 
+          byte1.toString(16).toUpperCase().padStart(2, '0') + 
+          byte2.toString(16).toUpperCase().padStart(2, '0') + 
+          byte3.toString(16).toUpperCase().padStart(2, '0');
+      }
+      else {
+        // Character cannot be encoded
+        return undefined;
+      }
+      i++;
+    }
+  }
+
+  // Encode any remaining standard characters in the buffer
+  processStandardBuffer();
+
+  return encoded;
+}
+
+/**
+ * Decodes a URN Code 40 encoded string
+ * @param input The encoded string
+ * @param options Decoding options
+ * @returns The decoded string or undefined if decoding fails
+ */
+function decode(
+  input: string, 
+  options: { 
+    trimInternalWhitespace?: boolean // Whether to trim internal whitespace characters
+  } = {}
+): string | undefined {
 	if (!input || input.length < 2) return undefined;
 
 	let res = '';
@@ -288,10 +354,12 @@ function decode(input: string): string | undefined {
 
 			if (uc40r[char1] === undefined || uc40r[char2] === undefined || uc40r[char3] === undefined) {
 				return undefined;
-			}
+				}
 
-			// Only add non-pad characters to result unless they're at the end
-			const triplet = uc40r[char1] + uc40r[char2] + uc40r[char3];
+			// Process the triplet
+			let triplet = uc40r[char1] + uc40r[char2] + uc40r[char3];
+      
+			// Add the triplet to result
 			res += triplet;
 			i += 4;
 		} else {
@@ -299,7 +367,18 @@ function decode(input: string): string | undefined {
 		}
 	}
 
-	// Trim trailing spaces that might have been added as padding
+	// Handle whitespace trimming after decoding the entire string
+	if (options.trimInternalWhitespace) {
+		// First, preserve any trailing spaces by splitting the string
+		const match = res.match(/^(.*?)(\s*)$/);
+		if (match) {
+			// Replace any internal spaces with nothing, then add back trailing spaces
+			return match[1].replace(/\s+/g, '') + match[2];
+		}
+		return res.replace(/\s+/g, ''); // Safety fallback, remove all whitespace
+	}
+
+	// Always trim trailing spaces
 	return res.trimEnd();
 }
 

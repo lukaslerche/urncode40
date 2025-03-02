@@ -8,6 +8,7 @@
 	let resultMessage: string = '';
 	let messageType: 'success' | 'error' | '' = '';
 	let messageTimer: ReturnType<typeof setTimeout>;
+	let trimInternalWhitespace: boolean = false; // Add option for whitespace trimming
 
 	// Clear message after some time
 	function showMessage(message: string, type: 'success' | 'error') {
@@ -55,7 +56,8 @@
 			return;
 		}
 
-		const result = decode(encodedText);
+		// Pass the trimInternalWhitespace option to decode
+		const result = decode(encodedText, { trimInternalWhitespace });
 		if (result) {
 			plainText = result;
 			showMessage('Text decoded successfully!', 'success');
@@ -124,6 +126,14 @@
 				<button class="primary" on:click={handleDecode}>Decode ↑</button>
 				<button class="outline" on:click={() => copyToClipboard(encodedText)}> Copy </button>
 			</div>
+			
+			<div class="options">
+				<label>
+					<input type="checkbox" bind:checked={trimInternalWhitespace} />
+					Trim PAD when decoding
+				</label>
+				<small>Removes padding spaces between characters that were in the encoded value</small>
+			</div>
 		</div>
 	</article>
 
@@ -158,8 +168,8 @@
 				<li><strong>FE:</strong> Triple-byte UTF-8 characters</li>
 			</ul>
 			<p>
-				This allows encoding most Unicode characters and improves efficiency for long numeric
-				sequences.
+				This implementation automatically selects the most efficient encoding method
+				for any given input, ensuring optimal use of space.
 			</p>
 		</details>
 	</div>
@@ -229,5 +239,23 @@
 
 	h4 {
 		margin: 1rem 0 0.5rem 0;
+	}
+
+	.options {
+		margin-top: 0.75rem;
+		font-size: 0.9rem;
+	}
+	
+	.options label {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.25rem;
+	}
+	
+	.options small {
+		display: block;
+		color: #666;
+		margin-left: 1.75rem;
 	}
 </style>
