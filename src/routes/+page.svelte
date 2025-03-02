@@ -8,7 +8,7 @@
 	let resultMessage: string = '';
 	let messageType: 'success' | 'error' | '' = '';
 	let messageTimer: ReturnType<typeof setTimeout>;
-	let trimInternalWhitespace: boolean = false; // Add option for whitespace trimming
+	let decodePadAsWhitespace: boolean = false; // New option name, default is false (trim padding)
 
 	// Clear message after some time
 	function showMessage(message: string, type: 'success' | 'error') {
@@ -50,14 +50,14 @@
 			return;
 		}
 
-		 // Updated validation for encoded text (must be hex but can have variable length with extended encoding)
+		// Updated validation for encoded text (must be hex but can have variable length with extended encoding)
 		if (!/^[0-9A-Fa-f]+$/.test(encodedText)) {
 			showMessage('Invalid encoded format. Must be hexadecimal.', 'error');
 			return;
 		}
 
-		// Pass the trimInternalWhitespace option to decode
-		const result = decode(encodedText, { trimInternalWhitespace });
+		// Pass the flipped option to decode
+		const result = decode(encodedText, { decodePadAsWhitespace });
 		if (result) {
 			plainText = result;
 			showMessage('Text decoded successfully!', 'success');
@@ -126,13 +126,15 @@
 				<button class="primary" on:click={handleDecode}>Decode ↑</button>
 				<button class="outline" on:click={() => copyToClipboard(encodedText)}> Copy </button>
 			</div>
-			
+
 			<div class="options">
 				<label>
-					<input type="checkbox" bind:checked={trimInternalWhitespace} />
-					Trim PAD when decoding
+					<input type="checkbox" bind:checked={decodePadAsWhitespace} />
+					Decode PAD as whitespace
 				</label>
-				<small>Removes padding spaces between characters that were in the encoded value</small>
+				<small
+					>When checked, padding spaces in encoded text will appear as spaces in decoded text</small
+				>
 			</div>
 		</div>
 	</article>
@@ -156,7 +158,9 @@
 			</p>
 			<p>It compacts three characters into two bytes (four hex digits) using the formula:</p>
 			<p><code>(1600*C1) + (40*C2) + C3 + 1</code></p>
-			<p><strong>Basic Character Set:</strong> A-Z, 0-9, space, hyphen (-), period (.) and colon (:).</p>
+			<p>
+				<strong>Basic Character Set:</strong> A-Z, 0-9, space, hyphen (-), period (.) and colon (:).
+			</p>
 			<h4>Extended Encoding</h4>
 			<p>URN Code 40 also supports extended encoding for additional characters and features:</p>
 			<ul>
@@ -168,8 +172,8 @@
 				<li><strong>FE:</strong> Triple-byte UTF-8 characters</li>
 			</ul>
 			<p>
-				This implementation automatically selects the most efficient encoding method
-				for any given input, ensuring optimal use of space.
+				This implementation automatically selects the most efficient encoding method for any given
+				input, ensuring optimal use of space.
 			</p>
 		</details>
 	</div>
@@ -245,14 +249,14 @@
 		margin-top: 0.75rem;
 		font-size: 0.9rem;
 	}
-	
+
 	.options label {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 		margin-bottom: 0.25rem;
 	}
-	
+
 	.options small {
 		display: block;
 		color: #666;
