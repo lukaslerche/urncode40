@@ -123,6 +123,11 @@ function encodeStandardBuffer(input: string): string {
 	return result;
 }
 
+/**
+ * Encode a string to an URN Code 40 encoded string
+ * @param input The original string
+ * @returns The URN Code 40 encoded string or undefined if encoding fails
+ */
 function encode(input: string): string | undefined {
 	if (!input) return undefined;
 
